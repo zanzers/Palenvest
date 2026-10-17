@@ -1,9 +1,12 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import LogoutButton from "@/app/components/LogoutButton";
+import AgentNav from "@/app/components/AgentNav";
 
-
-export default async function AgentPage() {
+export default async function AgentLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -15,22 +18,14 @@ export default async function AgentPage() {
     .select("status")
     .eq("id", user.id)
     .single();
-
-  if (agent?.status !== "approved") redirect("/pending");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name")
-    .eq("id", user.id)
-    .single();
+  if (agent?.status !== "approved") redirect("/login");
 
   return (
-    <div className="container py-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h1 className="h4 mb-0">Agent dashboard</h1>
-        <LogoutButton />
-      </div>
-      <p>Welcome, {profile?.full_name}.</p>
-    </div>
+    <>
+      <AgentNav />
+      <main>{children}</main>
+      {/* keeps content clear of the mobile bottom bar */}
+      <div className="d-md-none" style={{ height: 96 }} />
+    </>
   );
 }
